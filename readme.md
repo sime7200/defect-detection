@@ -17,14 +17,14 @@ It integrates **MLOps** capabilities for experiment tracking, model registration
 
 # 🖼️ Demo
 ## YOLOv8 – Bounding Box
-![YOLO predictions](screenshots_mlFlow\pred_YOLO.png)
+![YOLO predictions](screenshots_mlFlow/pred_YOLO.png)
 
 ## Mask2Former – Maschere segmentazione
-![Mask2former predictions](screenshots_mlFlow\pred_mask2former.png)
+![Mask2former predictions](screenshots_mlFlow/pred_mask2former.png)
 
 ## MLflow Tracking
 The training shown here has been reduced to 2 epochs for demonstration purposes only. The final model used in production was trained for 30 epochs.
-![title](screenshots_mlFlow\general-results.png)
+![title](screenshots_mlFlow/general-results.png)
 
 ---
 
@@ -43,7 +43,7 @@ The training shown here has been reduced to 2 epochs for demonstration purposes 
 - YOLOv8 fine-tuning with 30 epochs → model registered on MLflow. (Metrics on MLflow are just about 2 epochs)
 - Mask2Former fine-tuning → logged on MLflow with IoU and loss metrics
 - Model versioning in MLflow Model Registry (e.g., Production, Staging)
-![MLflow dashboard](screenshots_mlFlow\dashboard.png)
+![MLflow dashboard](screenshots_mlFlow/dashboard.png)
 ---
 
 # 📚 Conclusions
