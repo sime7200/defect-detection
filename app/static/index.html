@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Defect Detection Frontend</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f9f9f9;
+      color: #333;
+      margin: 0;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      color: #2c3e50;
+      margin-bottom: 1.5rem;
+    }
+
+    .card {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 900px;
+      text-align: center;
+    }
+
+    .actions {
+      margin-top: 1rem;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+    }
+
+    button {
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.2s;
+    }
+
+    button[type="submit"] {
+      background: #3498db;
+      color: white;
+    }
+    button[type="submit"]:hover {
+      background: #2980b9;
+    }
+
+    button[type="button"] {
+      background: #e74c3c;
+      color: white;
+    }
+    button[type="button"]:hover {
+      background: #c0392b;
+    }
+
+        .model-select-group {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.7rem;
+      margin: 1.2rem 0 0.5rem 0;
+    }
+
+    select#modelSelect {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+      background: #f4f8fb;
+      color: #2c3e50;
+      transition: border 0.2s;
+      outline: none;
+    }
+    select#modelSelect:focus {
+      border: 1.5px solid #3498db;
+      background: #eaf6fd;
+    }
+
+    .results-container {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 2rem;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .preview-box, .result-box {
+      flex: 1;
+      min-width: 300px;
+      text-align: center;
+    }
+
+    img {
+      max-width: 100%;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }
+
+    h3 {
+      margin-bottom: 0.5rem;
+      color: #2c3e50;
+    }
+
+    /* Loader */
+    #loader {
+      display: none;
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #3498db;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 1rem auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <h1>Defect Detection</h1>
+  <div class="card">
+    <form id="uploadForm">
+      <input type="file" id="fileInput" accept="image/*" required>
+      <div class="model-select-group">
+        <label for="modelSelect"><strong>Model:</strong></label>
+        <select id="modelSelect" name="model">
+          <option value="yolo">YOLO</option>
+          <option value="mask2former">Mask2Former</option>
+        </select>
+      </div>
+      <div class="actions">
+        <button type="submit">Load and predict</button>
+        <button type="button" id="cancelBtn">Cancel</button>
+      </div>
+    </form>
+
+    <!-- Nuova sezione con anteprima e risultato fianco a fianco -->
+    <div class="results-container">
+      <div class="preview-box" id="preview"></div>
+      <div class="result-box">
+        <h3 id="resultTitle" style="display:none;">Predictions:</h3>
+        <div id="loader"></div>
+        <div id="result"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  const form = document.getElementById("uploadForm");
+  const previewDiv = document.getElementById("preview");
+  const resultDiv = document.getElementById("result");
+  const resultTitle = document.getElementById("resultTitle");
+  const cancelBtn = document.getElementById("cancelBtn");
+  const fileInput = document.getElementById("fileInput");
+  const modelSelect = document.getElementById("modelSelect");
+  const loader = document.getElementById("loader");
+
+  // Mostra anteprima immagine selezionata
+  fileInput.addEventListener("change", () => {
+    const file = fileInput.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        previewDiv.innerHTML = `<h3>Preview:</h3><img src="${reader.result}" />`;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // Gestione submit = invio immagine al backend
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const file = fileInput.files[0];
+    if (!file) return alert("Seleziona un'immagine!");
+
+    const formData = new FormData();
+    formData.append("file", file);
+    const modelType = modelSelect.value;
+
+    // Mostra loader e reset UI
+    loader.style.display = "block";
+    resultDiv.innerHTML = "";
+    resultTitle.style.display = "none";
+
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:8000/predict?return_image=true&model_type=${modelType}`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      if (!response.ok) throw new Error("Errore nella predizione");
+
+      const contentType = response.headers.get("content-type");
+
+      if (contentType && contentType.includes("application/json")) {
+        // Caso YOLO con return_image=false (ma in questo esempio usiamo sempre true)
+        const data = await response.json();
+        console.log("JSON ricevuto:", data);
+        alert("Predizione completata. Vedi console per i dettagli.");
+      } else {
+        // Caso immagine (YOLO con return_image=true, oppure Mask2Former)
+        const blob = await response.blob();
+        console.log("Blob ricevuto:", blob);
+        const imageUrl = URL.createObjectURL(blob);
+        console.log("URL immagine:", imageUrl);
+
+        resultDiv.innerHTML = `<img src="${imageUrl}" />`;
+        resultTitle.style.display = "block";
+      }
+    } catch (error) {
+      alert("Errore: " + error.message);
+    } finally {
+    // Nascondi loader sempre
+    loader.style.display = "none";
+  }
+  });
+
+  // Pulsante Annulla → reset form e preview
+  cancelBtn.addEventListener("click", () => {
+    fileInput.value = "";
+    previewDiv.innerHTML = "";
+    resultDiv.innerHTML = "";
+    resultTitle.style.display = "none";
+  });
+</script>
+
+</body>
+</html>

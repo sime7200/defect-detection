@@ -1,0 +1,22 @@
+# Ambiente virtuale
+.venv/
+
+# File di configurazione locali
+*.env
+*.sqlite
+mlruns/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+
+# Modelli e checkpoint pesanti
+*.pt
+*.pth
+*.ckpt
+checkpoints/
+checkpoint-*/
+*.bin
+
+screenshots_mlFlow/
